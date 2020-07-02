@@ -8,7 +8,7 @@ import time
 
 def producer():
     with lock:
-        print(f"Set locking: {lock._value}")
+        print(f"Set locking...")
         time.sleep(1)
         print("I'm free!")
 
@@ -16,8 +16,8 @@ def producer():
 '''
 Это означает, что только ОДИН поток может выполнить функцию. Фактически, это напоминает обычное синхронное выполнение
 '''
-max_people = 1
-lock = threading.BoundedSemaphore(max_people)
+max_threads = 1
+lock = threading.BoundedSemaphore(max_threads)
 
 task1 = threading.Thread(target=producer)
 task2 = threading.Thread(target=producer)

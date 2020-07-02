@@ -8,7 +8,7 @@ import threading
 '''
 
 thread_data = threading.local()
-thread_data.value = 5
+thread_data.value = 5 # как бы глобальная переменная
 
 # Функция выводит значения .value потока
 # Она будет запускаться в разных потоках, чтобы проверить, чему равняется value каждого потока
@@ -18,7 +18,7 @@ def print_value():
 
 # Фунция для КАЖДОГО потока увеличивает атрибут value times раз
 def counter(started, times):
-    thread_data.value = started
+    thread_data.value = started # создается уникальный для данного потока value
     for i in range(times):
         thread_data.value += 1
     print_value()

@@ -10,7 +10,7 @@ def producer():
         print('Done!')
         with lock:# поток МОЖЕТ захватить блокировку, которую он уже захватил
             print('Recursive lock activated')
-    print("locker released")
+    print("Locker released")
 
 '''
 Все различие в том, что вместо Lock() используем RLock()
