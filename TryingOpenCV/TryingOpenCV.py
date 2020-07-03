@@ -16,10 +16,14 @@ class VideoGet():
         self.stream = cv2.VideoCapture(0)
         (self.grabbed, self.frame) = self.stream.read()
         self.stopped = False
+        self.frame = None
 
     # Функция запускает поток для получения видео
     def start(self):
-        Thread(target=self.get, args=()).start()
+        print("starting get_thread")
+        get_thread = Thread(target=self.get, args=())
+        get_thread.name = "get_thread"
+        get_thread.start()
         return self
 
     # Функция получает кадр видео
@@ -45,20 +49,51 @@ class VideoShow():
 
     # Функция запускает поток для вывода видео
     def start(self):
-        Thread(target=self.show, args=()).start()
+        print("starting show_thread")
+        show_thread = Thread(target=self.show, args=())
+        show_thread.name = "show_thread"
+        show_thread.start()
         return self
 
     # Функция выводит кадр на экран
     def show(self):
         while not self.stopped:
-            cv2.imshow("Video", self.frame)
+            if self.frame is not None:
+                cv2.imshow("Video", self.frame)
             if cv2.waitKey(1) == ord("q"):
                 self.stopped = True
 
     def stop(self):
         self.stopped = True
 
+class FaceDetector():
+    """
+    Класс служит для распознавания лица
+    """
+    def __init__(self, frame):
+        self.face_cascade = cv2.CascadeClassifier('faces.xml')
+        self.stopped = False
+        self.frame = frame
 
+    def start(self):
+        print("starting detect_thread")
+        detect_thread = Thread(target=self.detect_faces, args=())
+        detect_thread.name = "detect_thread"
+        detect_thread.start()
+        return self
+
+    def detect_faces(self):
+        while not self.stopped:
+            try:
+                gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+                faces = self.face_cascade.detectMultiScale(gray)
+                for (x, y, w, h) in faces:
+                    cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            except:
+                pass
+
+    def stop(self):
+        self.stopped = True
 
 def threadBoth():
     """
@@ -69,40 +104,23 @@ def threadBoth():
 
     video_getter = VideoGet().start()
     video_shower = VideoShow(video_getter.frame).start()
+    video_detector = FaceDetector(video_getter.frame).start()
 
-    print(f"Threads alive: {threading.active_count()}")
     while True:
         if video_getter.stopped or video_shower.stopped:
             video_shower.stop()
             video_getter.stop()
+            video_detector.stop()
             break
 
-        # кадр постоянно берется из одного потока и помещается в другой
-        frame = video_getter.frame
-        video_shower.frame = frame
+        # кадр берется из одного потока
+        got_frame = video_getter.frame
+        # помещается во второй и обрабатывается
+        video_detector.frame = got_frame
+        # обработанный кадр помещается в третий поток для вывода
+        video_shower.frame = video_detector.frame
 
 
 
-
-
-class CarDetector():
-    """
-    Класс служит для распознавания авто, пока не используется
-    """
-    def __init__(self):
-        self.face_cascade = cv2.CascadeClassifier('faces.xml')
-    def detect_faces():
-        print(f"Threads alive: {threading.active_count()}")
-        while True:
-            print(f"Thread: {threading.current_thread().name}")
-            ret, frame = cap.read()
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray)
-            for (x, y, w, h) in faces:
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-            cv2.imshow('video', frame)
-            if cv2.waitKey(33) == ord('q'):
-                print("Q pressed")
-                break
 
 threadBoth()
