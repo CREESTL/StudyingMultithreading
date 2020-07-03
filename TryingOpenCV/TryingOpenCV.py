@@ -43,9 +43,10 @@ class VideoShow():
     Класс показывает кадр в отдельном потоке
     """
 
-    def __init__(self, frame=None):
+    def __init__(self, window_name=None, frame=None):
         self.frame = frame
         self.stopped = False
+        self.window_name = window_name
 
     # Функция запускает поток для вывода видео
     def start(self):
@@ -59,7 +60,7 @@ class VideoShow():
     def show(self):
         while not self.stopped:
             if self.frame is not None:
-                cv2.imshow("Video", self.frame)
+                cv2.imshow(self.window_name, self.frame)
             if cv2.waitKey(1) == ord("q"):
                 self.stopped = True
 
@@ -103,12 +104,14 @@ def threadBoth():
     """
 
     video_getter = VideoGet().start()
-    video_shower = VideoShow(video_getter.frame).start()
+    video_shower_1 = VideoShow("camera 1", video_getter.frame).start()
+    video_shower_2 = VideoShow("camera 2", video_getter.frame).start()
     video_detector = FaceDetector(video_getter.frame).start()
 
     while True:
-        if video_getter.stopped or video_shower.stopped:
-            video_shower.stop()
+        if video_getter.stopped or video_shower_1.stopped or video_shower_2.stopped:
+            video_shower_1.stop()
+            video_shower_2.stop()
             video_getter.stop()
             video_detector.stop()
             break
@@ -118,7 +121,8 @@ def threadBoth():
         # помещается во второй и обрабатывается
         video_detector.frame = got_frame
         # обработанный кадр помещается в третий поток для вывода
-        video_shower.frame = video_detector.frame
+        video_shower_1.frame = video_detector.frame
+        video_shower_2.frame = video_detector.frame
 
 
 
